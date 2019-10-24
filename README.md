@@ -1,122 +1,122 @@
- waifu2x-converter-glsl
+# waifu2x-converter-glsl
 ================================================================================
-作成：うえした(@ueshita)
+# What is this?
+Image Super-Resolution for Anime-style art using Deep Convolutional Neural Networks.
 
-waifu2x-converter-cpp (https://github.com/WL-Amigo/waifu2x-converter-cpp) をベースに
-OpenGLを使いGPUで計算処理を行うように改造したものです。
-ノートPCの非力なIntel製GPUでもたぶん動きます。
+The original project (waifu2x) uses CUDA which requires a Nvidia GPU to make the best of it.
 
-コマンドライン周りはwaifu2x-converter.exeのままですので、
-waifu2x-converter-glsl.exeをwaifu2x-converter.exeにリネームすれば
-GUIフロントエンドがほぼそのまま使えると思います。
+Due to the abandonment of Nvidia Cards on all new Macs, this project helps you to run waifu2x using Inter or AMD graphic cards on macOS.
 
-exeバイナリのダウンロードはこちら↓  
-https://github.com/ueshita/waifu2x-converter-glsl/releases
+# What did I do?
 
- 動作環境
-----------
+  - Write some instructions about how to build this project on macOS
 
-OpenGL 3.1が動作すること。  
-（Intel HD Graphics 5000で動作確認済）
+Apparently, the original author has stopped maintaining this project and many people do not know how to build this project on macOS using Xcode.
 
+# How to build this on macOS?
+### Install dependencies
 
- 使い方
---------
+Make sure you have OpenCV and GLFW installed.
 
-本ソフトはコマンドラインツールです。
-`コマンドプロンプト` を立ち上げ、次のようにコマンドを打ち込み、使用して下さい。
+Install them using Homebrew
 
-以下のコマンドは、使い方を画面に出力します。
-```
-waifu2x-converter-glsl.exe --help
+```sh
+$ brew install opencv
+$ brew install glfw
 ```
 
-以下のコマンドは、画像変換を実行するコマンドの例です。
+After the installation you can find them in 
+
+```sh
+/usr/local/Cellar
 ```
-waifu2x-converter-glsl.exe -i mywaifu.png -m noise_scale -j 8 --scale_ratio 1.6 --noise_level 2
+
+### Build setting in Xcode
+
+Open the project in Xcode and go to Project Setting -> Choose 'Target' -> General -> Frameworks and Libararies
+
+Make sure you have
+
+- Cocoa.framework
+- CoreFoundation.framework
+- CoreGraphics.framework
+- CoreVideo.framework
+- IOKit.framework
+- OpenGL.framework
+- libglfw.x.x.dylib
+- libopencv_core.x.x.x.dylib
+- libopencv_imgcodecs.x.x.x.dylib
+- libopencv_imgproc.x.x.x.dylib
+
+added.
+
+Note: You can find all .dylib files in
+
+```sh
+/usr/local/lib
 ```
-以上を実行すると、`mywaifu(noise_scale)(Level2)(x1.600000).png`に変換結果が保存されます。
+simply drag and drop them to the Xcode.
 
-本ソフトでは、以下のオプションを指定することが出来ます。
+### Copy OpenCV2 folder to your project
 
-   -i <文字列>,  --input_file <文字列>
-     (必須)  変換する画像へのパス(フルパスでの入力をおすすめします)
+Go to 
+```sh
+/usr/local/Cellar/opencv/x.x.x/include/opencv*/
+```
+Copy the 'opencv2' folder to 
 
-   -o <string>,  --output_file <string>
-     変換された画像を保存するファイルへのパス(フルパスでの入力をおすすめします)
-     拡張子(最後の.pngなど)は必ず入力するようにして下さい。
-     指定しなかった場合は自動でファイル名を決定し、そのファイルに保存します。
-     ファイル名の決定ルールは、
-     `[元の画像ファイル名]``(モード名)``(ノイズ除去レベル(ノイズ除去モードの場合))``(拡大率(拡大モードの場合))``.png`
-     のようになっています。
-     保存される場所は、基本的には入力画像と同じディレクトリになります。
-     (入力画像へのパスを相対パスで記述した場合、予期せぬことが起こる可能性があります)
+```sh
+Yourprojectfolder/include/
+```
+### Build
+In Xcode, press command+B to build this project.
 
-   -m <noise|scale|noise_scale>,  --mode <noise|scale|noise_scale>
-     変換モードを指定します。指定しなかった場合は`noise_scale`が選択されます。
-      * noise : ノイズ除去を行います (正確には、ノイズ除去用のモデルを用いて画像変換を行います)
-      * scale : 拡大を行います (正確には、既存アルゴリズムで拡大した後に、拡大画像補完用のモデルを用いて画像変換を行います)
-      * noise_scale : ノイズ除去と拡大を行います (ノイズ除去を行った後に、引き続き拡大処理を行います)
+Note: You can find the executable file on left side navigator -> Products, right click and choose 'Show in Finder'
 
-   -b <整数値>,  --block_size <整数値>
-     プログラム内で処理を分割するための基準となるブロックサイズを指定します。
-     このオプションで指定した数のスレッドがプログラム内で起動されます。
-     この数値を増やすことで効率的に処理を行うことができますが、より多くのグラフィックスメモリが必要になります。
-     必要なグラフィックスメモリのサイズの計算式は以下です。  
-       必要なグラフィックスメモリ = (ブロックサイズ) ^ 2 * 4 * 256 + α  
-     指定した数値で処理することが無理な場合はエラーが発生します。
-     デフォルト値は`512`です。
+# Dependencies
 
-   --scale_ratio <小数点付き数値>
-     何倍に拡大するかを指定します。デフォルト値は`2.0`ですが、2.0倍以外も指定できます。
-     2.0以外の数値を指定すると、次のような処理を行います。
-      * まず、指定された倍率を必要十分にカバーするように、2倍拡大を繰り返し行います。
-      * 2の累乗以外の数値がしてされている場合は、指定倍率になるように拡大した画像を線形フィルタで縮小します。
-
-   --noise_level <1|2>
-     ノイズ除去レベルを指定します。ノイズ除去用のモデルはレベル1とレベル2のみ用意されているので、
-      1 もしくは 2 を指定して下さい。
-     デフォルト値は`1`です。
-
-   --model_dir <文字列>
-     モデルが格納されているディレクトリへのパスを指定します。デフォルト値は`models`です。
-     基本的には指定しなくても大丈夫です。独自のモデルを使用する時などに指定して下さい。
-
-   --,  --ignore_rest
-     このオプションがしてされた後の全てのオプションを無視します。
-     スクリプト・バッチファイル用です。
-
-   --version
-     バージョン情報を出力し、終了します。
-
-   -h,  --help
-     使い方を表示し、終了します。
-     手軽に使い方を確認したい時などにどうぞ。
+This executable file is NOT standalone, you must copy the 'models' and 'shaders' folders in the original project folder and put them in the same direaction as the executable file.
 
 
- 更新履歴
-----------
+# Usage
 
- * v1.0.0 : 初版
- * v1.1.0 : 
-    - オリジナル版と比べて画像のまわりがにじんだように見える問題を修正
-    - 低メモリ消費に抑えるための内部での画像分割処理を追加(出力は従来通りです)
-    - 60%処理を高速化
- * v1.1.1 : 
-    - koroshellとの組み合わせでエラーが発生する問題を修正。
-      (-jオプションをダミーとして復活させました)
-
-<!-- -->
-
- 謝辞
-------
-本ソフトのオリジナル(C++版)から、使い方の説明等色々転載させていただきました。
-C++版のWL-Amigo様、オリジナル版のultraist様に感謝いたします。
+##### The following contents are Google translated from the original author, please refer to https://github.com/ueshita/waifu2x-converter-glsl
 
 
-References
-========================
+This software is a command line tool. Start up the command prompt and use the following commands.
 
-- Original implementation: https://github.com/nagadomi/waifu2x
-- Python implementation: https://marcan.st/transf/waifu2x.py
-- C++ implementation: https://github.com/WL-Amigo/waifu2x-converter-cpp
+The following command outputs usage information to the screen.
+```sh
+./waifu2x-converter-glsl --help
+```
+The following commands are examples of commands that perform image conversion.
+```sh
+./waifu2x-converter-glsl -i mywaifu.png -m noise_scale -j 8 --scale_ratio 1.6 --noise_level 2
+```
+Executing the above will save the conversion result to mywaifu (noise_scale) (Level2) (x1.600000) .png.
+
+#### In this software, the following options can be specified.
+
+-i <string>, --input_file <string> (Required) Path to the image to convert (It is recommended to enter the full path)
+
+-o, --output_file Path to the file to save the converted image (It is recommended to enter the full path.) Make sure to enter the extension (last .png etc.). If not specified, the file name is determined automatically and saved in that file. The rules for determining the file name are: [original image file name]  (mode name)  (noise removal level (in noise removal mode))  (enlargement ratio (in enlargement mode))  .png It is like this. The saved location is basically the same directory as the input image. (If the path to the input image is described as a relative path, unexpected things may occur.)
+
+-m <noise | scale | noise_scale>, --mode <noise | scale | noise_scale> Specify the conversion mode. If not specified, noise_scale is selected. * noise: Noise removal (To be exact, image conversion is performed using a model for noise removal) * Scale: Enlargement (To be exact, after enlargement with existing algorithm, for enlargement image completion * Noise_scale: Noise removal and enlargement (After removing noise, enlargement is continued)
+
+-b <integer value>, --block_size <integer value> Specify the reference block size for dividing the processing in the program. The number of threads specified by this option is started in the program. Increasing this number can make the process more efficient, but requires more graphics memory. The formula for calculating the required graphics memory size is as follows.
+Required graphics memory = (block size) ^ 2 * 4 * 256 + α
+An error will occur if it is impossible to process with the specified number. The default value is 512.
+
+--scale_ratio <number with decimal point> Specify how many times to scale. The default value is 2.0, but you can specify a value other than 2.0. If a value other than 2.0 is specified, the following processing is performed. * First, repeat the 2x enlargement to cover the specified magnification sufficiently. * If a value other than a power of 2 is set, the enlarged image is reduced with a linear filter to the specified magnification.
+
+--noise_level <1 | 2> Specify the noise removal level. Specify only 1 or 2 because the noise removal models are available only for level 1 and level 2. The default value is 1.
+
+--model_dir <string> Specify the path to the directory where the model is stored. The default value is models. Basically, you don't have to specify it. Please specify when using your own model.
+
+-, --ignore_rest Ignore all options after this option is done. For scripts and batch files.
+
+--version Print version information and exit.
+
+-h, --help Print a usage message and exit. Please when you want to check how to use easily.
+
+
